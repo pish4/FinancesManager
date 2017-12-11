@@ -1,4 +1,5 @@
-﻿using System;
+﻿using FinancesManager.Domain.Entities;
+using System;
 using System.Collections.Generic;
 
 namespace FinancesManager.Models
@@ -39,5 +40,36 @@ namespace FinancesManager.Models
         public string LoginProvider { get; set; }
 
         public string ProviderKey { get; set; }
+    }
+
+    public class UserHomeInfoModel
+    {
+         public List<FinancialAccount> accounts { get; set; }
+         public List<AccountMember> shared_accounts { get; set; }
+    }
+
+    public class TransactionViewModel
+    {
+        public long id { get; set; }
+        public string name { get; set; }
+        public float amount { get; set; }
+    }
+
+    public class AccountMemberViewModel
+    {
+        public long id { get; set; }
+        public string name { get; set; }
+        public bool owner { get; set; }
+    }
+
+    public class UserInFinAccountViewModel {
+        public string username {get; set;}
+    }
+
+    public class FinancialAccountViewModel
+    {
+        public AccountMemberViewModel account {get;set;}
+        public List<UserInFinAccountViewModel> users { get; set; }
+        public List<TransactionViewModel> transactions { get; set; }
     }
 }

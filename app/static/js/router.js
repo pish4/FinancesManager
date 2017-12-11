@@ -45,7 +45,7 @@ function AppViewModel() {
   self.chosenEditAccount = ko.observable(null);
 
   self.addAccountSubmit = function(e) {
-    $.post('/account', {
+    $.post('/api/FinancialAccount', {
       name: self.newAccountName
     }).then(function(data) {
       self.newAccountName("");
@@ -57,10 +57,9 @@ function AppViewModel() {
 
   self.editAccount = function(e) {
   $.ajax({
-        url: '/account',
+      url: '/api/FinancialAccount/' + e.id,
         type: 'PUT',
         data: {
-            id: e.id,
             name: e.name
         },
         success: function() {
@@ -74,11 +73,8 @@ function AppViewModel() {
 
   self.deleteAccount = function(e) {
     $.ajax({
-        url: '/account',
+        url: '/api/FinancialAccount/' + e.id,
         type: 'DELETE',
-        data: {
-            id: e.id
-        },
         success: function() {
           location.hash = "#/";
         },
@@ -89,7 +85,7 @@ function AppViewModel() {
   }
 
   self.addSharedAccountSubmit = function(e) {
-    $.post('/account_member', {
+    $.post('/api/AccountMember', {
       id : self.chosenAccountInfoData().id,
       username: self.newSharedAccountName
     }).then(function(data) {
@@ -100,8 +96,7 @@ function AppViewModel() {
     })
   };
   self.addTransactionSubmit = function(e) {
-
-    $.post('/add_transaction', {
+    $.post('/api/Transaction', {
       name: self.newTransactionName,
       amount: self.newTransactionAmount,
       account_id: self.chosenAccountInfoData().id
@@ -136,7 +131,7 @@ function AppViewModel() {
       self.chosenAddSharedAccount(null);
       self.chosenEditAccount(null);
 
-      $.get('/home').then(function(json) {
+        $.get('/api/Account/Home').then(function (json) {
         self.chosenHome("home");
         var mappedAccounts = $.map(JSON.parse(json).accounts, function(item) { return new Account(item) });
         self.accounts(mappedAccounts);
@@ -173,7 +168,7 @@ function AppViewModel() {
       self.chosenAddSharedAccount(null);
       self.chosenEditAccount(null);
 
-      $.get('/account/' + context.params.id).then(function(json) {
+      $.get('/api/FinancialAccount/' + context.params.id).then(function (json) {
         var account = JSON.parse(json).account;
         self.chosenAccountInfo(account);
         self.chosenAccountInfoData(account);

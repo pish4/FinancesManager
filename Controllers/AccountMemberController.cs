@@ -13,9 +13,17 @@ using FinancesManager.DataProvider.Contexts;
 
 namespace FinancesManager.Controllers
 {
-    public class AccountMemberController : ApiController
+    public class AccountMemberController : BaseApiController
     {
         private ApplicationDbContext db = new ApplicationDbContext();
+        private Repositories.Repository<AccountMember> accountMemberRepository;
+        private Repositories.Repository<FinancialAccount> financialAccountRepository;
+
+        public AccountMemberController()
+        {
+            accountMemberRepository = new Repositories.Repository<AccountMember>(db);
+            financialAccountRepository = new Repositories.Repository<FinancialAccount>(db);
+        }
 
         // GET api/AccountMember
         public IQueryable<AccountMember> GetAccountMembers()
@@ -72,6 +80,31 @@ namespace FinancesManager.Controllers
 
         // POST api/AccountMember
         [ResponseType(typeof(AccountMember))]
+        public IHttpActionResult PostAccountMember(long accountId, string username)
+        {
+            var accounts = financialAccountRepository.GetAll().FindAll(am => am.User == UserRecord && am.Id == accountId);
+            if (accounts.Count != 1)
+            {
+                return BadRequest();
+            }
+            var financialAccount = accounts.First();
+
+            var user = UserManager.FindByNameAsync(username).Result;
+            if (user == null)
+            {
+                return BadRequest();
+            }
+
+
+            db.AccountMembers.Add(new AccountMember { Account = financialAccount, User = user});
+            db.SaveChanges();
+
+            return Ok();
+        }
+
+        /*
+        // POST api/AccountMember
+        [ResponseType(typeof(AccountMember))]
         public IHttpActionResult PostAccountMember(AccountMember accountmember)
         {
             if (!ModelState.IsValid)
@@ -84,6 +117,7 @@ namespace FinancesManager.Controllers
 
             return CreatedAtRoute("DefaultApi", new { id = accountmember.Id }, accountmember);
         }
+         * */
 
         // DELETE api/AccountMember/5
         [ResponseType(typeof(AccountMember))]

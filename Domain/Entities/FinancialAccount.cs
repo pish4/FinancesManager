@@ -11,6 +11,6 @@ namespace FinancesManager.Domain.Entities
     {
         public String Name { get; set; }
 
-        public virtual ApplicationUser User { get; set; }
+        public ApplicationUser User { get; set; }
     }
 }

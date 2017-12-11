@@ -10,6 +10,7 @@ using System.Web.Http;
 using System.Web.Http.Description;
 using FinancesManager.Domain.Entities;
 using FinancesManager.DataProvider.Contexts;
+using FinancesManager.Models;
 
 namespace FinancesManager.Controllers
 {
@@ -17,7 +18,9 @@ namespace FinancesManager.Controllers
     public class FinancialAccountController : BaseApiController
     {
         private ApplicationDbContext db = new ApplicationDbContext();
-
+        private Repositories.Repository<FinancialAccount> financialAccountRepository;
+        private Repositories.Repository<AccountMember> accountMemberRepository;
+        private Repositories.Repository<Transaction> transactionRepository;
 
         // GET api/FinancialAccount
         public IQueryable<FinancialAccount> GetFinancialAccount()
@@ -26,7 +29,6 @@ namespace FinancesManager.Controllers
         }
 
         // GET api/FinancialAccount/5
-        [ResponseType(typeof(FinancialAccount))]
         public IHttpActionResult GetFinancialAccount(long id)
         {
             FinancialAccount financialaccount = db.FinancialAccount.Find(id);
@@ -35,7 +37,21 @@ namespace FinancesManager.Controllers
                 return NotFound();
             }
 
-            return Ok(financialaccount);
+            var accountMembers = accountMemberRepository.GetAll().FindAll(am => am.Account.Id == id);
+            bool isMember = accountMembers.FindAll(am => am.User == UserRecord).Count == 1;
+            if (!isMember)
+            {
+                return BadRequest("user not in account");
+            }
+
+            List<TransactionViewModel> transactions = transactionRepository.GetAll().FindAll(t => t.Account.Id == id)
+                .Select(t => new TransactionViewModel {id = t.Id, amount = t.Amount, name = t.Name }).ToList();
+
+            AccountMemberViewModel amvm = new AccountMemberViewModel { id = id, name = financialaccount.Name, owner = financialaccount.User == UserRecord };
+            List<UserInFinAccountViewModel> users = accountMembers.Select(am => new UserInFinAccountViewModel{username = am.User.UserName}).ToList();
+            FinancialAccountViewModel favm = new FinancialAccountViewModel { account = amvm, users = users, transactions = transactions };
+
+            return Ok(favm);
         }
 
         // PUT api/FinancialAccount/5

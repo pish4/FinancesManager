@@ -17,37 +17,31 @@ using FinancesManager.Models;
 using FinancesManager.Providers;
 using FinancesManager.Results;
 using FinancesManager.DataProvider.Contexts;
+using FinancesManager.Domain.Entities;
 
 namespace FinancesManager.Controllers
 {
     [Authorize]
     [RoutePrefix("api/Account")]
-    public class AccountController : ApiController
+    public class AccountController : BaseApiController
     {
         private const string LocalLoginProvider = "Local";
         private ApplicationUserManager _userManager;
+        private ApplicationDbContext db = new ApplicationDbContext();
+        private Repositories.Repository<FinancialAccount> financialAccountRepository;
+        private Repositories.Repository<AccountMember> accountMemberRepository;
 
         public AccountController()
         {
+            financialAccountRepository = new Repositories.Repository<FinancialAccount>(db);
+            accountMemberRepository = new Repositories.Repository<AccountMember>(db);
         }
 
         public AccountController(ApplicationUserManager userManager,
             ISecureDataFormat<AuthenticationTicket> accessTokenFormat)
         {
-            UserManager = userManager;
+            //UserManager = userManager;
             AccessTokenFormat = accessTokenFormat;
-        }
-
-        public ApplicationUserManager UserManager
-        {
-            get
-            {
-                return _userManager ?? Request.GetOwinContext().GetUserManager<ApplicationUserManager>();
-            }
-            private set
-            {
-                _userManager = value;
-            }
         }
 
         public ISecureDataFormat<AuthenticationTicket> AccessTokenFormat { get; private set; }
@@ -64,6 +58,21 @@ namespace FinancesManager.Controllers
                 Email = User.Identity.GetUserName(),
                 HasRegistered = externalLogin == null,
                 LoginProvider = externalLogin != null ? externalLogin.LoginProvider : null
+            };
+        }
+
+
+        [HostAuthentication(DefaultAuthenticationTypes.ExternalBearer)]
+        [Route("Home")]
+        public UserHomeInfoModel GetUserHomeInfo()
+        {
+            List<FinancialAccount> financialAccounts = financialAccountRepository.GetAll().FindAll(fm => fm.User.Equals(UserRecord));
+            List<AccountMember> sharedAccounts = accountMemberRepository.GetAll().FindAll(am => am.User.Equals(UserRecord));
+          
+            return new UserHomeInfoModel
+            {
+                accounts = financialAccounts,
+                shared_accounts = sharedAccounts
             };
         }
 

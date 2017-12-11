@@ -5,7 +5,7 @@ $(function() {
     });
     $('#logout').click(function(e) {
         e.preventDefault();
-        $.post('/logout', function() {
+        $.post('/api/Account/Logout', function () {
             location.reload()
         })
     })
@@ -29,7 +29,8 @@ $(function() {
 		e.preventDefault();
 	});
     $('#login-form').submit(function(e) {
-        $.post('/login', {
+        $.post('/Token', {
+            grant_type: 'password',
             username: $('#login-form #username').val(),
             password: $('#login-form #password').val()
         }).then(function(data) {
@@ -40,11 +41,11 @@ $(function() {
         e.preventDefault();
     })
     $('#register-form').submit(function(e) {
-        $.post('/register', {
+        $.post('/api/Account/Register', {
             username: $('#register-form #username').val(),
             email: $('#register-form #email').val(),
             password: $('#register-form #password').val(),
-            confirm_password: $('#register-form #confirm-password').val()
+            confirmPassword: $('#register-form #confirm-password').val()
         }).then(function(data) {
             location.reload()
         }).catch(function(error) {
