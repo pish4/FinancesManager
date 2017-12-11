@@ -149,7 +149,7 @@ function AppViewModel() {
       self.chosenAddSharedAccount(null);
       self.chosenEditAccount(null);
 
-      $.get('/home').then(function(json) {
+      $.get('/api/Account/Home').then(function (json) {
         self.chosenAddAccount("add");
       })
     });
