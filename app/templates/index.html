@@ -14,12 +14,12 @@
           <a class="navbar-brand" href="#/" id="home-btn">Finances management</a>
         </div>
         <ul class="nav navbar-nav navbar-right">
-            <li><a href="#/">{{ username }}</a></li>
-            {% if not loggedIn %}
-            <li><a id="login" href="#"><span class="glyphicon glyphicon-log-in"></span> Login</a></li>
-          {% else %}
-            <li><a id="logout" href="#"><span class="glyphicon glyphicon-log-in"></span> Logout</a></li>
-          {% endif %}
+            <li data-bind="visible: currentUser().length"><a href="#/"><span data-bind="text : currentUser"></span></a></li>
+   
+            <li data-bind="visible: !currentUser().length"><a id="login" href="#"><span class="glyphicon glyphicon-log-in"></span> Login</a></li>
+  
+            <li data-bind="visible: currentUser().length"><a id="logout" href="#"><span class="glyphicon glyphicon-log-in"></span> Logout</a></li>
+  
         </ul>
       </div>
     </nav>

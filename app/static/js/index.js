@@ -1,13 +1,30 @@
-$(function() {
+$(function () {
+    function getHeaders() {
+        // If we already have a bearer token, set the Authorization header.
+        var token = sessionStorage.getItem('tokenKey');
+        var headers = {};
+        if (token) {
+            headers.Authorization = 'Bearer ' + token;
+        }
+        return headers;
+    }
     $('#home-btn').click(function() {
         $('#login-container').fadeOut(100);
         $('#main').delay(100).fadeIn(100);
     });
     $('#logout').click(function(e) {
         e.preventDefault();
-        $.post('/api/Account/Logout', function () {
-            location.reload()
-        })
+        $.ajax({
+            url: '/api/Account/Logout',
+            type: 'POST',
+            headers: getHeaders(),
+            success: function () {
+                document.getElementById("login").style.visibility = "visible";
+                document.getElementById("logout").style.visibility = "hidden";
+                sessionStorage.clear();
+                location.reload()
+            }
+        });
     })
     $('#login').click(function(e) {
         $('#main').fadeOut(100);
@@ -33,10 +50,14 @@ $(function() {
             grant_type: 'password',
             username: $('#login-form #username').val(),
             password: $('#login-form #password').val()
-        }).then(function(data) {
+        }).then(function (data) {
+            document.getElementById("login").style.visibility = "hidden";
+            document.getElementById("logout").style.visibility = "visible";
+            sessionStorage.setItem('tokenKey', data.access_token);
+            sessionStorage.setItem('username', data.userName);
             location.reload()
         }).catch(function(error) {
-
+            alert(error)
         })
         e.preventDefault();
     })

@@ -10,43 +10,47 @@ using System.Web.Http;
 using System.Web.Http.Description;
 using FinancesManager.Domain.Entities;
 using FinancesManager.DataProvider.Contexts;
+using FinancesManager.Services.Interfaces;
+using Microsoft.AspNet.Identity;
+using FinancesManager.Services.DTO;
 
 namespace FinancesManager.Controllers
 {
+    [HostAuthentication(DefaultAuthenticationTypes.ExternalBearer)]
     public class AccountMemberController : BaseApiController
     {
-        private ApplicationDbContext db = new ApplicationDbContext();
-        private Repositories.Repository<AccountMember> accountMemberRepository;
-        private Repositories.Repository<FinancialAccount> financialAccountRepository;
 
-        public AccountMemberController()
+        private IAccountMemberBL accountMemberService;
+
+        public AccountMemberController(IAccountMemberBL _service)
         {
-            accountMemberRepository = new Repositories.Repository<AccountMember>(db);
-            financialAccountRepository = new Repositories.Repository<FinancialAccount>(db);
+            accountMemberService = _service;
         }
 
         // GET api/AccountMember
         public IQueryable<AccountMember> GetAccountMembers()
         {
-            return db.AccountMembers;
+            return null;//db.AccountMembers;
         }
 
         // GET api/AccountMember/5
         [ResponseType(typeof(AccountMember))]
         public IHttpActionResult GetAccountMember(long id)
         {
+            /*
             AccountMember accountmember = db.AccountMembers.Find(id);
             if (accountmember == null)
             {
                 return NotFound();
             }
-
-            return Ok(accountmember);
+            */
+            return Ok();// (accountmember);
         }
 
         // PUT api/AccountMember/5
         public IHttpActionResult PutAccountMember(long id, AccountMember accountmember)
         {
+            /*
             if (!ModelState.IsValid)
             {
                 return BadRequest(ModelState);
@@ -74,15 +78,16 @@ namespace FinancesManager.Controllers
                     throw;
                 }
             }
-
+            */
             return StatusCode(HttpStatusCode.NoContent);
         }
 
         // POST api/AccountMember
-        [ResponseType(typeof(AccountMember))]
-        public IHttpActionResult PostAccountMember(long accountId, string username)
+        public IHttpActionResult PostAccountMember(AccountMemberDTO accountMember)
         {
-            var accounts = financialAccountRepository.GetAll().FindAll(am => am.User == UserRecord && am.Id == accountId);
+            accountMemberService.Create(accountMember, UserRecord);
+            /*
+            var accounts = financialAccountRepository.GetAll().FindAll(am => am.UserId == UserRecord && am.Id == accountId);
             if (accounts.Count != 1)
             {
                 return BadRequest();
@@ -96,10 +101,10 @@ namespace FinancesManager.Controllers
             }
 
 
-            db.AccountMembers.Add(new AccountMember { Account = financialAccount, User = user});
+            db.AccountMembers.Add(new AccountMember { Account = financialAccount, UserId = user});
             db.SaveChanges();
-
-            return Ok();
+            */
+            return Json(accountMember);
         }
 
         /*
@@ -123,6 +128,7 @@ namespace FinancesManager.Controllers
         [ResponseType(typeof(AccountMember))]
         public IHttpActionResult DeleteAccountMember(long id)
         {
+            /*
             AccountMember accountmember = db.AccountMembers.Find(id);
             if (accountmember == null)
             {
@@ -131,22 +137,22 @@ namespace FinancesManager.Controllers
 
             db.AccountMembers.Remove(accountmember);
             db.SaveChanges();
-
-            return Ok(accountmember);
+            */
+            return Ok();// Ok(accountmember);
         }
 
         protected override void Dispose(bool disposing)
         {
             if (disposing)
             {
-                db.Dispose();
+                //db.Dispose();
             }
             base.Dispose(disposing);
         }
 
         private bool AccountMemberExists(long id)
         {
-            return db.AccountMembers.Count(e => e.Id == id) > 0;
+            return true;// db.AccountMembers.Count(e => e.Id == id) > 0;
         }
     }
 }

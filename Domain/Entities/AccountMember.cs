@@ -8,7 +8,7 @@ namespace FinancesManager.Domain.Entities
 {
     public class AccountMember : BaseEntity
     {
-        public ApplicationUser User { get; set; }
-        public FinancialAccount Account { get; set; }
+        public string UserId { get; set; }
+        public virtual FinancialAccount Account { get; set; }
     }
 }

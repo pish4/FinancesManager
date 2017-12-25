@@ -11,26 +11,48 @@ using System.Web.Http.Description;
 using FinancesManager.Domain.Entities;
 using FinancesManager.DataProvider.Contexts;
 using FinancesManager.Models;
+using Microsoft.AspNet.Identity;
+using FinancesManager.Services.Interfaces;
+using FinancesManager.Services.DTO;
 
 namespace FinancesManager.Controllers
 {
     [Authorize]
     public class FinancialAccountController : BaseApiController
     {
-        private ApplicationDbContext db = new ApplicationDbContext();
-        private Repositories.Repository<FinancialAccount> financialAccountRepository;
+        //private ApplicationDbContext db = new ApplicationDbContext();
+        /*private Repositories.Repository<FinancialAccount> financialAccountRepository;
         private Repositories.Repository<AccountMember> accountMemberRepository;
         private Repositories.Repository<Transaction> transactionRepository;
+        */
+        private readonly IFinancialAccountBL financialAccountService;
+
+        public FinancialAccountController(IFinancialAccountBL _service)
+        {
+            financialAccountService = _service;
+        }
+
+
+
+        public FinancialAccountController()
+        {
+            //financialAccountRepository = new Repositories.Repository<FinancialAccount>(db);
+            //accountMemberRepository = new Repositories.Repository<AccountMember>(db);
+            //transactionRepository = new Repositories.Repository<Transaction>(db);
+        }
 
         // GET api/FinancialAccount
         public IQueryable<FinancialAccount> GetFinancialAccount()
         {
-            return db.FinancialAccount;
+            return null;//db.FinancialAccount;
         }
 
         // GET api/FinancialAccount/5
+        [HostAuthentication(DefaultAuthenticationTypes.ExternalBearer)]
         public IHttpActionResult GetFinancialAccount(long id)
         {
+            var favm = financialAccountService.GetFinancialAccountViewModel(id, UserRecord);
+            /*
             FinancialAccount financialaccount = db.FinancialAccount.Find(id);
             if (financialaccount == null)
             {
@@ -50,63 +72,39 @@ namespace FinancesManager.Controllers
             AccountMemberViewModel amvm = new AccountMemberViewModel { id = id, name = financialaccount.Name, owner = financialaccount.User == UserRecord };
             List<UserInFinAccountViewModel> users = accountMembers.Select(am => new UserInFinAccountViewModel{username = am.User.UserName}).ToList();
             FinancialAccountViewModel favm = new FinancialAccountViewModel { account = amvm, users = users, transactions = transactions };
-
+            */
             return Ok(favm);
         }
 
         // PUT api/FinancialAccount/5
-        public IHttpActionResult PutFinancialAccount(long id, FinancialAccount financialaccount)
+        public IHttpActionResult PutFinancialAccount(long id, FinancialAccountDTO financialaccount)
         {
-            if (!ModelState.IsValid)
-            {
-                return BadRequest(ModelState);
-            }
-
-            if (id != financialaccount.Id)
-            {
-                return BadRequest();
-            }
-
-            db.Entry(financialaccount).State = EntityState.Modified;
-
-            try
-            {
-                db.SaveChanges();
-            }
-            catch (DbUpdateConcurrencyException)
-            {
-                if (!FinancialAccountExists(id))
-                {
-                    return NotFound();
-                }
-                else
-                {
-                    throw;
-                }
-            }
-
+            financialAccountService.Rename(id, financialaccount.name);
             return StatusCode(HttpStatusCode.NoContent);
         }
 
         // POST api/FinancialAccount
-        [ResponseType(typeof(FinancialAccount))]
-        public IHttpActionResult PostFinancialAccount(FinancialAccount financialaccount)
+        [ResponseType(typeof(FinancialAccountDTO))]
+        public IHttpActionResult PostFinancialAccount(FinancialAccountDTO financialaccount)
         {
             if (!ModelState.IsValid)
             {
                 return BadRequest(ModelState);
             }
-            financialaccount.User = UserRecord;
-            db.FinancialAccount.Add(financialaccount);
-            db.SaveChanges();
+            //financialaccount.User = UserRecord;
+            financialAccountService.Create(financialaccount, UserRecord);
+            //db.FinancialAccount.Add(financialaccount);
+            //db.SaveChanges();
 
-            return CreatedAtRoute("DefaultApi", new { id = financialaccount.Id }, financialaccount);
+            return CreatedAtRoute("DefaultApi", new { id = 47 }, financialaccount);
         }
 
         // DELETE api/FinancialAccount/5
         [ResponseType(typeof(FinancialAccount))]
         public IHttpActionResult DeleteFinancialAccount(long id)
         {
+            financialAccountService.Delete(id);
+            /*
             FinancialAccount financialaccount = db.FinancialAccount.Find(id);
             if (financialaccount == null)
             {
@@ -115,22 +113,22 @@ namespace FinancesManager.Controllers
 
             db.FinancialAccount.Remove(financialaccount);
             db.SaveChanges();
-
-            return Ok(financialaccount);
+            */
+            return Ok();// Ok(financialaccount);
         }
 
         protected override void Dispose(bool disposing)
         {
             if (disposing)
             {
-                db.Dispose();
+                //db.Dispose();
             }
             base.Dispose(disposing);
         }
 
         private bool FinancialAccountExists(long id)
         {
-            return db.FinancialAccount.Count(e => e.Id == id) > 0;
+            return true;//db.FinancialAccount.Count(e => e.Id == id) > 0;
         }
     }
 }

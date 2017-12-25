@@ -18,6 +18,8 @@ using FinancesManager.Providers;
 using FinancesManager.Results;
 using FinancesManager.DataProvider.Contexts;
 using FinancesManager.Domain.Entities;
+using FinancesManager.Services.Interfaces;
+using FinancesManager.Services.DTO;
 
 namespace FinancesManager.Controllers
 {
@@ -27,14 +29,16 @@ namespace FinancesManager.Controllers
     {
         private const string LocalLoginProvider = "Local";
         private ApplicationUserManager _userManager;
-        private ApplicationDbContext db = new ApplicationDbContext();
-        private Repositories.Repository<FinancialAccount> financialAccountRepository;
-        private Repositories.Repository<AccountMember> accountMemberRepository;
+        //private ApplicationDbContext db = new ApplicationDbContext();
+        //private Repositories.Repository<FinancialAccount> financialAccountRepository;
+        //private Repositories.Repository<AccountMember> accountMemberRepository;
+        private IFinancialAccountBL financialAccountBL;
+        private IAccountMemberBL accountMemberBL;
 
-        public AccountController()
+        public AccountController(IFinancialAccountBL _finAccService, IAccountMemberBL _accMemService)
         {
-            financialAccountRepository = new Repositories.Repository<FinancialAccount>(db);
-            accountMemberRepository = new Repositories.Repository<AccountMember>(db);
+            financialAccountBL = _finAccService;
+            accountMemberBL = _accMemService;
         }
 
         public AccountController(ApplicationUserManager userManager,
@@ -64,16 +68,16 @@ namespace FinancesManager.Controllers
 
         [HostAuthentication(DefaultAuthenticationTypes.ExternalBearer)]
         [Route("Home")]
-        public UserHomeInfoModel GetUserHomeInfo()
+        public IHttpActionResult GetUserHomeInfo()
         {
-            List<FinancialAccount> financialAccounts = financialAccountRepository.GetAll().FindAll(fm => fm.User.Equals(UserRecord));
-            List<AccountMember> sharedAccounts = accountMemberRepository.GetAll().FindAll(am => am.User.Equals(UserRecord));
+            List<FinancialAccountDTO> financialAccounts = financialAccountBL.GetAllByUser(UserRecord);
+            List<AccountMemberDTO> sharedAccounts = accountMemberBL.GetAllByUser(UserRecord);
           
-            return new UserHomeInfoModel
+            return Json(new UserHomeInfoModel
             {
                 accounts = financialAccounts,
                 shared_accounts = sharedAccounts
-            };
+            });
         }
 
         // POST api/Account/Logout

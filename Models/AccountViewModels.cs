@@ -1,4 +1,5 @@
 ﻿using FinancesManager.Domain.Entities;
+using FinancesManager.Services.DTO;
 using System;
 using System.Collections.Generic;
 
@@ -44,8 +45,8 @@ namespace FinancesManager.Models
 
     public class UserHomeInfoModel
     {
-         public List<FinancialAccount> accounts { get; set; }
-         public List<AccountMember> shared_accounts { get; set; }
+         public List<FinancialAccountDTO> accounts { get; set; }
+         public List<AccountMemberDTO> shared_accounts { get; set; }
     }
 
     public class TransactionViewModel

@@ -20,9 +20,21 @@ function User(data) {
     this.username = ko.observable(data.username);
 }
 
+function getHeaders() {
+    // If we already have a bearer token, set the Authorization header.
+    var token = sessionStorage.getItem('tokenKey');
+    var headers = {};
+    if (token) {
+        headers.Authorization = 'Bearer ' + token;
+    }
+    return headers;
+}
+
 function AppViewModel() {
   var self = this;
 
+  self.currentUser = ko.observable("");
+ 
   self.accounts = ko.observableArray([]);
   self.sharedAccounts = ko.observableArray([]);
   self.transactions = ko.observableArray([]);
@@ -44,38 +56,54 @@ function AppViewModel() {
   self.chosenAddSharedAccount = ko.observable(null);
   self.chosenEditAccount = ko.observable(null);
 
-  self.addAccountSubmit = function(e) {
-    $.post('/api/FinancialAccount', {
-      name: self.newAccountName
-    }).then(function(data) {
-      self.newAccountName("");
-      location.hash = "#/";
-    }).catch(function(error) {
-
-    })
-  };
-
-  self.editAccount = function(e) {
-  $.ajax({
-      url: '/api/FinancialAccount/' + e.id,
-        type: 'PUT',
-        data: {
-            name: e.name
-        },
-        success: function() {
-          location.hash = "#/account/" + e.id;
-        },
-        error: function(error) {
-
-        }
-    });
+  self.setCurrentUser = function() {
+      var username = sessionStorage.getItem('username');
+      self.currentUser(username);
   }
+
+    self.addAccountSubmit = function (e) {
+        $.ajax({
+            url: '/api/FinancialAccount',
+            type: 'POST',
+            headers: getHeaders(),
+            data: {
+                name: self.newAccountName
+            },
+            success: function (data) {
+                self.setCurrentUser();
+                self.newAccountName("");
+                location.hash = "#/";
+            },
+            error: function (error) {
+                alert(error);
+            }
+        });
+    };
+
+    self.editAccount = function (e) {
+        $.ajax({
+            url: '/api/FinancialAccount/' + e.id,
+            type: 'PUT',
+            data: {
+                name: e.name
+            },
+            headers: getHeaders(),
+            success: function () {
+                self.setCurrentUser();
+                location.hash = "#/account/" + e.id;
+            },
+            error: function(error) {
+            }
+        });
+    }
 
   self.deleteAccount = function(e) {
     $.ajax({
         url: '/api/FinancialAccount/' + e.id,
         type: 'DELETE',
-        success: function() {
+        headers: getHeaders(),
+        success: function () {
+            self.setCurrentUser();
           location.hash = "#/";
         },
         error: function(error) {
@@ -84,29 +112,45 @@ function AppViewModel() {
     });
   }
 
-  self.addSharedAccountSubmit = function(e) {
-    $.post('/api/AccountMember', {
-      id : self.chosenAccountInfoData().id,
-      username: self.newSharedAccountName
-    }).then(function(data) {
-      self.newSharedAccountName("");
-      location.hash = "#/account/" + self.chosenAccountInfoData().id
-    }).catch(function(error) {
-      console.log(error);
-    })
+  self.addSharedAccountSubmit = function (e) {
+      $.ajax({
+          url: '/api/AccountMember',
+          type: 'POST',
+          headers: getHeaders(),
+          data: {
+              id: self.chosenAccountInfoData().id,
+              name: self.newSharedAccountName
+          },
+          success: function (data) {
+              self.setCurrentUser();
+              self.newSharedAccountName("");
+              location.hash = "#/account/" + self.chosenAccountInfoData().id
+          },
+          error: function (errir) {
+              console.error(error);
+          }
+      });
   };
-  self.addTransactionSubmit = function(e) {
-    $.post('/api/Transaction', {
-      name: self.newTransactionName,
-      amount: self.newTransactionAmount,
-      account_id: self.chosenAccountInfoData().id
-    }).then(function(data) {
-      self.newTransactionName("");
-      self.newTransactionAmount(0);
-      location.hash = "#/account/" + self.chosenAccountInfoData().id
-    }).catch(function(error) {
-
-    })
+  self.addTransactionSubmit = function (e) {
+      $.ajax({
+          url: '/api/Transaction',
+          type: 'POST',
+          headers: getHeaders(),
+          data: {
+              name: self.newTransactionName,
+              amount: self.newTransactionAmount,
+              account_id: self.chosenAccountInfoData().id
+          },
+          success: function (data) {
+              self.setCurrentUser();
+              self.newTransactionName("");
+              self.newTransactionAmount(0);
+              location.hash = "#/account/" + self.chosenAccountInfoData().id
+          },
+          error: function (data) {
+              alert(data)
+          }
+      });
   };
 
 
@@ -130,64 +174,80 @@ function AppViewModel() {
       self.chosenAddTransaction(null);
       self.chosenAddSharedAccount(null);
       self.chosenEditAccount(null);
-
-        $.get('/api/Account/Home').then(function (json) {
-        self.chosenHome("home");
-        var mappedAccounts = $.map(JSON.parse(json).accounts, function(item) { return new Account(item) });
-        self.accounts(mappedAccounts);
-        var mappedSharedAccounts = $.map(JSON.parse(json).shared_accounts, function(item) { return new SharedAccount(item) });
-        self.sharedAccounts(mappedSharedAccounts);
-        }).catch(function(error) {
-          self.chosenHome(null);
-          context.partial('../static/views/about.html').then(function() {});
-      })
+      $.ajax({
+          url: '/api/Account/Home',
+          type: 'GET',
+          headers: getHeaders(),
+          success: function (json) {
+              self.setCurrentUser();
+              self.chosenHome("home");
+              var mappedAccounts = $.map(json.accounts, function (item) { return new Account(item) });
+              self.accounts(mappedAccounts);
+              var mappedSharedAccounts = $.map(json.shared_accounts, function (item) { return new SharedAccount(item) });
+              self.sharedAccounts(mappedSharedAccounts);
+          },
+          error: function (error) {
+              self.chosenHome(null);
+              context.partial('../static/views/about.html').then(function () { });
+          }
+      });
+        
     });
     this.get('#/add_account', function (context) {
-      self.chosenHome(null);
-      self.chosenAccountInfo(null);
-      self.chosenAddTransaction(null);
-      self.chosenAddSharedAccount(null);
-      self.chosenEditAccount(null);
-
-      $.get('/api/Account/Home').then(function (json) {
-        self.chosenAddAccount("add");
-      })
+        self.chosenHome(null);
+        self.chosenAccountInfo(null);
+        self.chosenAddTransaction(null);
+        self.chosenAddSharedAccount(null);
+        self.chosenEditAccount(null);
+        $.ajax({
+            url: '/api/Account/Home',
+            type: 'GET',
+            headers: getHeaders(),
+            success: function (json) {
+                self.setCurrentUser();
+                self.chosenAddAccount("add");
+            }
+        });
     });
     this.get('#/add_shared_account', function (context) {
-      self.chosenHome(null);
-      self.chosenAccountInfo(null);
-      self.chosenAddTransaction(null);
-      self.chosenAddAccount(null);
-      self.chosenEditAccount(null);
-      self.chosenAddSharedAccount("add");
+        self.chosenHome(null);
+        self.chosenAccountInfo(null);
+        self.chosenAddTransaction(null);
+        self.chosenAddAccount(null);
+        self.chosenEditAccount(null);
+        self.chosenAddSharedAccount("add");
     });
     this.get('#/account/:id', function(context) {
-      self.chosenHome(null);
-      self.chosenAddAccount(null);
-      self.chosenAddTransaction(null);
-      self.chosenAddSharedAccount(null);
-      self.chosenEditAccount(null);
+        self.chosenHome(null);
+        self.chosenAddAccount(null);
+        self.chosenAddTransaction(null);
+        self.chosenAddSharedAccount(null);
+        self.chosenEditAccount(null);
+        
+        $.ajax({
+            url: '/api/FinancialAccount/' + context.params.id,
+            type: 'GET',
+            headers: getHeaders(),
+            success: function (json) {
+                self.setCurrentUser();
+                var account = json.account;
+                self.chosenAccountInfo(account);
+                self.chosenAccountInfoData(account);
+                var transactions = json.transactions;
 
-      $.get('/api/FinancialAccount/' + context.params.id).then(function (json) {
-        var account = JSON.parse(json).account;
-        self.chosenAccountInfo(account);
-        self.chosenAccountInfoData(account);
-        var transactions = JSON.parse(json).transactions;
+                var mappedTransactions = $.map(transactions, function (item) { return new Transaction(item) });
+                self.transactions(mappedTransactions);
+                var users = json.users;
+                var mappedUsers = $.map(users, function (item) { return new User(item) });
+                self.accountUsers(mappedUsers)
 
-        var mappedTransactions = $.map(transactions, function(item) { return new Transaction(item) });
-        self.transactions(mappedTransactions);
-        var users = JSON.parse(json).users;
-        var mappedUsers =  $.map(users, function(item) { return new User(item) });
-        self.accountUsers(mappedUsers)
-
-        var amount = 0;
-        transactions.forEach(function(t) {
-          amount += t.amount;
-        }, this);
-        self.accountSummary(amount);
-
-
-      })
+                var amount = 0;
+                transactions.forEach(function (t) {
+                    amount += t.amount;
+                }, this);
+                self.accountSummary(amount);
+            }
+        });
     })
     this.get('#/account/edit/:id', function(context) {
         self.chosenHome(null);

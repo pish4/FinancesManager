@@ -38,7 +38,6 @@ namespace FinancesManager.DataProvider.Contexts
 
         public virtual DbSet<Transaction> Transactions { get; set; }
         public virtual DbSet<FinancialAccount> FinancialAccount { get; set; }
-
         public static ApplicationDbContext Create()
         {
             return new ApplicationDbContext();

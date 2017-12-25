@@ -10,7 +10,7 @@ namespace FinancesManager.Domain.Entities
     {
         public String Name { get; set; }
         public float Amount { get; set; }
-        public ApplicationUser User { get; set; }
-        public FinancialAccount Account { get; set; }
+        public string UserId { get; set; }
+        public virtual FinancialAccount Account { get; set; }
     }
 }
